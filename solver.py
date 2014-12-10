@@ -87,9 +87,10 @@ def convertBW(imgPath):
         raise ValueError('cannot call convertBW with no image path')
 
     colourImg    = Image.open(imgPath)
+    preserved    = colourImg.convert('RGB')
     grayscaleImg = colourImg.convert('L')
     bwImg        = grayscaleImg.point(lambda x: 0 if x<128 else 255, '1')
-    return bwImg, colourImg
+    return bwImg, preserved
 
 def manhattanHeuristic(point, endPoint):
     xDifference = abs(point.x - endPoint.x)
@@ -138,19 +139,19 @@ def solve(imgPath, startPoint, endPoint):
         node.heuristicCost = manhattanHeuristic(node.point, endPoint)
         node.movementCost = 10
         node.parent = startNode
-        search.openSet.put(deepcopy(node))
-        search.openSetMirror.add(deepcopy(node.point))
+        search.openSet.put(node)
+        search.openSetMirror.add(node.point)
 
     # put start point in closed set
-    search.closedSet.add(deepcopy(startNode.point))
-    search.closedSetMirror.add(deepcopy(startNode))
+    search.closedSet.add(startNode.point)
+    search.closedSetMirror.add(startNode)
 
     while not search.openSet.empty():
         currentNode = search.openSet.get()
         draw.point((currentNode.point.x, currentNode.point.y), 'red')
         search.openSetMirror.remove(currentNode.point)
-        search.closedSet.add(deepcopy(currentNode.point))
-        search.closedSetMirror.add(deepcopy(currentNode))
+        search.closedSet.add(currentNode.point)
+        search.closedSetMirror.add(currentNode)
         if currentNode.point == endPoint:
             break
 
@@ -162,8 +163,8 @@ def solve(imgPath, startPoint, endPoint):
                 node.parent        = currentNode
                 node.heuristicCost = manhattanHeuristic(node.point, endPoint)
                 node.movementCost  = 10 + currentNode.movementCost
-                search.openSet.put(deepcopy(node))
-                search.openSetMirror.add(deepcopy(node.point))
+                search.openSet.put(node)
+                search.openSetMirror.add(node.point)
             else:
                 if (10 + currentNode.movementCost) < node.movementCost:
                     node.parent       = currentNode
@@ -182,7 +183,6 @@ def solve(imgPath, startPoint, endPoint):
         if not currentNode:
             break
 
-        print currentNode.point.x, currentNode.point.y
         draw.point((currentNode.point.x, currentNode.point.y), 'green')
         currentNode = currentNode.parent
 
