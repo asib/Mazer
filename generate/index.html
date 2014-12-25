@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Maze Generator</title>
+</head>
+<body>
+<svg width="500" height="500" id="svg">
+</svg>
+<br />
+<input type="button" value="Prev" onclick="Prev()" />
+<input type="button" value="Next" onclick="Next()" />
+<input type="button" value="Begin" onclick="StartAnim()" />
+</body>
+<script src="snap.svg-min.js"></script>
+<script src="priority-queue.min.js"></script>
+<script src="miniset.js"></script>
+<script type="text/javascript">
+    // Use Set keys of the format: "topLeftX,topLeftY"
+    var width   = 10,
+        height  = 10,
+        rows    = 20,
+        cols    = 20,
+        xOffset = 3,
+        yOffset = 3;
+        
+    var s = Snap("#svg");
+
+    var MapNode = function(x, y) {
+        this.x = x;
+        this.y = y;
+    };
+    
+    MapNode.prototype.Draw = function() {
+        return s.rect((this.x*width)+(this.x*xOffset),
+                      (this.y*height)+(this.y*yOffset),
+                      width,
+                      height);
+    };
+    
+    MapNode.prototype.toString = function() {
+        return this.x + "," + this.y;
+    };
+    
+    MapNode.prototype.Neighbours = function() {
+        var neighbours = [];
+        if (this.x > 0) {
+            neighbours.push(new MapNode(this.x-1, this.y))
+        }
+        if (this.x < (rows-1)) {
+            neighbours.push(new MapNode(this.x+1, this.y))
+        }
+        if (this.y > 0) {
+            neighbours.push(new MapNode(this.x, this.y-1))
+        }
+        if (this.y < (cols-1)) {
+            neighbours.push(new MapNode(this.x, this.y+1))
+        }
+        return neighbours
+    };
+    
+    function DrawMap(openSet, closedSet) {
+        for (var i = 0; i < cols; i++) {
+            for (var j = 0; j < rows; j++) {
+                var node = new MapNode(i,j);
+                if (closedSet.has(node)) {
+                    var thisRect = node.Draw();
+                    thisRect.attr({fill: "#f00"});
+                } else if (openSet.has(node)) {
+                    var thisRect = node.Draw();
+                    thisRect.attr({fill: "#0f0"});
+                } else {
+                    node.Draw();
+                }
+            }
+        }
+    }
+    
+    function Trace(stop) {
+        var closedSet = new MiniSet();
+        var openSet   = new MiniSet();
+    
+        var startNode = new MapNode(0, 0);
+        openSet.add(startNode);
+    
+        var stopIter = stop;
+        var counter  = 0;
+        
+        while (!openSet.isEmpty()) {
+            if (counter == stopIter) {
+                break;
+            }
+            var keys = openSet.keys();
+            var currentNode = keys[0];
+            openSet.remove(currentNode);
+            closedSet.add(currentNode);
+            
+            var neighbours = currentNode.Neighbours();
+            while (neighbours.length > 0) {
+                var neighbour = neighbours.pop()
+                if (!closedSet.has(neighbour) && !openSet.has(neighbour)) {
+                    openSet.add(neighbour)
+                }
+            }
+            counter += 1;
+        }
+
+        DrawMap(openSet, closedSet);
+    }
+    
+    var step = 0;
+    
+    function Next() {
+        step += 1;
+        Trace(step);
+    }
+    
+    function Prev() {
+        if (step > 0) {
+            step -= 1;
+            Trace(step);
+        }
+    }
+    
+    function StartAnim() {
+        step = 0;
+        setInterval(Next, 50);
+    }
+    
+    DrawMap(new MiniSet(), new MiniSet());
+</script>
+</html>
