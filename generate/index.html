@@ -16,10 +16,10 @@
 <script src="miniset.js"></script>
 <script type="text/javascript">
     // Use Set keys of the format: "topLeftX,topLeftY"
-    var width   = 10,
-        height  = 10,
-        rows    = 20,
-        cols    = 20,
+    var width   = 50,
+        height  = 50,
+        rows    = 5,
+        cols    = 5,
         xOffset = 3,
         yOffset = 3;
         
@@ -31,8 +31,8 @@
     };
     
     MapNode.prototype.Draw = function() {
-        return s.rect((this.x*width)+(this.x*xOffset),
-                      (this.y*height)+(this.y*yOffset),
+        return s.rect((this.x*width)+(this.x*xOffset)+5,
+                      (this.y*height)+(this.y*yOffset)+5,
                       width,
                       height);
     };
@@ -64,12 +64,13 @@
                 var node = new MapNode(i,j);
                 if (closedSet.has(node)) {
                     var thisRect = node.Draw();
-                    thisRect.attr({fill: "#f00"});
+                    thisRect.attr({fill: "#fff", stroke: "#f00"});
                 } else if (openSet.has(node)) {
                     var thisRect = node.Draw();
-                    thisRect.attr({fill: "#0f0"});
+                    thisRect.attr({fill: "#fff", stroke: "#0f0"});
                 } else {
-                    node.Draw();
+                    var thisRect = node.Draw();
+                    thisRect.attr({fill: "#fff", stroke: "#000"});
                 }
             }
         }

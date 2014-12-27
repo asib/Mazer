@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Maze Generator</title>
+</head>
+<body>
+<svg width="500" height="500" id="svg">
+</svg>
+<br />
+<input type="button" value="Run" onclick="Run()" />
+</body>
+<script src="snap.svg-min.js"></script>
+<script src="priority-queue.min.js"></script>
+<script src="miniset.js"></script>
+<script type="text/javascript">
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    // Use Set keys of the format: "topLeftX,topLeftY"
+    var width   = 10,
+        height  = 10,
+        rows    = 20,
+        cols    = 20,
+        xOffset = 0,
+        yOffset = 0;
+        
+    var s = Snap("#svg");
+
+    var MapNode = function(x, y, id) {
+        this.x      = x;
+        this.y      = y;
+        this.parent = id;
+        this.edges  = new MiniSet();
+    };
+    
+    MapNode.prototype.Draw = function() {
+        s.rect((this.x*width)+(this.x*xOffset)+5,
+              (this.y*height)+(this.y*yOffset)+5,
+              width,
+              height).attr({fill: "#fff", stroke: "#000"});
+        var node = this;
+        this.edges.each(function(edge) {
+            var xDiff = node.x - edge.x
+            var yDiff = node.y - edge.y
+            
+            if (xDiff != 0) {
+                if (xDiff > 0) {
+                    s.line((node.x*width)+(node.x*xOffset)+5,
+                           (node.y*height)+(node.y*yOffset)+5,
+                           (node.x*width)+(node.x*xOffset)+5,
+                           (node.y*height)+(node.y*yOffset)+5+height)
+                      .attr({stroke: "#fff", strokeWidth: 2});
+                } else {
+                    s.line((node.x*width)+(node.x*xOffset)+5+width,
+                           (node.y*height)+(node.y*yOffset)+5,
+                           (node.x*width)+(node.x*xOffset)+5+width,
+                           (node.y*height)+(node.y*yOffset)+5+height)
+                      .attr({stroke: "#fff", strokeWidth: 2});
+                }
+            } else {
+                if (yDiff > 0) {
+                    s.line((node.x*width)+(node.x*xOffset)+5,
+                           (node.y*height)+(node.y*yOffset)+5,
+                           (node.x*width)+(node.x*xOffset)+5+width,
+                           (node.y*height)+(node.y*yOffset)+5)
+                      .attr({stroke: "#fff", strokeWidth: 2});
+                } else {
+                    s.line((node.x*width)+(node.x*xOffset)+5,
+                           (node.y*height)+(node.y*yOffset)+5+height,
+                           (node.x*width)+(node.x*xOffset)+5+width,
+                           (node.y*height)+(node.y*yOffset)+5+height)
+                      .attr({stroke: "#fff", strokeWidth: 2});
+                }
+            }
+        });
+    };
+    
+    MapNode.prototype.toString = function() {
+        return this.x + "," + this.y;
+    };
+    
+    MapNode.prototype.Neighbours = function() {
+        var neighbours = [];
+        if (this.x > 0) {
+            neighbours.push(new MapNode(this.x-1, this.y))
+        }
+        if (this.x < (rows-1)) {
+            neighbours.push(new MapNode(this.x+1, this.y))
+        }
+        if (this.y > 0) {
+            neighbours.push(new MapNode(this.x, this.y-1))
+        }
+        if (this.y < (cols-1)) {
+            neighbours.push(new MapNode(this.x, this.y+1))
+        }
+        return neighbours
+    };
+    
+    function DrawMap(map) {
+        for (var i = 0; i < cols; i++) {
+            for (var j = 0; j < rows; j++) {
+                map[i][j].Draw();
+                /*s.text((node.x*width)+(node.x*xOffset)+10,
+                       (node.y*height)+(node.y*yOffset)+20,
+                       node.parent);*/
+            }
+        }
+    }
+    
+    function Run() {
+        map = [];
+        for (var i = 0; i < cols; i++) {
+            col = [];
+            for (var j = 0; j < rows; j++) {
+                var node = new MapNode(i,j,(j*rows + i));
+                col.push(node);
+            }
+            map.push(col);
+        }
+        
+        var finished = false;
+        do {
+            finished = true;
+            var init = map[0][0].parent;
+            for (var x = 0; x < cols; x++) {
+                for (var y = 0; y < rows; y++) {
+                    if (map[x][y].parent != init) {
+                        finished = false;
+                        break;
+                    }
+                }
+            }
+            var cont = false;
+            do {
+                var fCol = getRandomInt(0, cols),
+                    fRow = getRandomInt(0, rows);
+                var neighbours = map[fCol][fRow].Neighbours();
+                var sNode = neighbours[getRandomInt(0, neighbours.length)];
+                
+                if (map[fCol][fRow].edges.has(map[sNode.x][sNode.y])) {
+                    cont = false;
+                //} else if (map[fCol][fRow].parent == map[sNode.x][sNode.y].parent) {
+                //    cont = false;
+                } else {
+                    console.log(map[fCol][fRow].parent == map[sNode.x][sNode.y].parent);
+                    for (var x = 0; x < cols; x++) {
+                        for (var y = 0; y < rows; y++) {
+                            if (map[x][y].parent == map[fCol][fRow].parent
+                                && !(x==fCol && y==fRow)) {
+                                map[x][y].parent = map[sNode.x][sNode.y].parent
+                            }
+                        }
+                    }
+                    map[fCol][fRow].parent = map[sNode.x][sNode.y].parent
+                    map[fCol][fRow].edges.add(map[sNode.x][sNode.y]);
+                    map[sNode.x][sNode.y].edges.add(map[fCol][fRow]);
+                    cont = true;
+                }
+            } while (!cont);
+        } while (!finished);
+        
+        DrawMap(map);
+    }
+    
+    Run();
+</script>
+</html>
