@@ -1,3 +1,4 @@
+#!/usr/local/bin/python
 from copy import deepcopy
 from PIL import Image, ImageDraw
 import pprint
